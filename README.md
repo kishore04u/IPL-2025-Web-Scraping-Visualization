@@ -1,5 +1,3 @@
-# IPL-2025-Web-Scraping-Visualization
-This project is a complete data pipeline for scraping IPL (Indian Premier League) cricket data and visualizing it in a dashboard using Python.
 # 🏏 IPL Data Science Dashboard - Web Scraping & Visualization
 
 This project is a complete data pipeline for scraping IPL (Indian Premier League) cricket data and visualizing it using Python.
@@ -55,13 +53,13 @@ Generate and save two visualizations:
 
 ##📊 images/ipl_dashboard.png
 
-##FEATURES
+## FEATURES
 
 ✅ Automated web scraping of IPL points table
 
 🧹 Data cleaning and transformation
 
-##📊 Visualizations:
+## 📊 Visualizations:
 
 Pie chart of team losses
 
@@ -73,7 +71,7 @@ Team race chart with team logos
 
 🎨 Customizable color maps and chart styles
 
-##DEPENDENCIES
+## DEPENDENCIES
 
 Python 3.7+
 
@@ -89,12 +87,12 @@ numpy
 
 ChromeDriver (compatible with your Chrome version)
 
-🛠️ Customization
+## 🛠️ Customization
 🔧 Logos: Add .png logo images in the logos/ folder. Filenames must match team names in the script.
 
 🎨 Style: Modify plt.cm colormaps, figure size, and layouts in ipl_dashboard.py.
 
-🌟 Future Enhancements
+## 🌟 Future Enhancements
 Add historical season comparisons
 
 Convert dashboard to interactive web view (Plotly/Dash)
@@ -103,7 +101,7 @@ Auto-refresh data daily
 
 Include advanced stats: NRR trends, batting averages, etc.
 
-🤝 Acknowledgements
+## 🤝 Acknowledgements
 ESPN Cricinfo — for live IPL data
 
 Open-source tools: Selenium, Pandas, Matplotlib, Pillow
