@@ -1,0 +1,174 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import time
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from PIL import Image
+import numpy as np
+import os
+
+# === STEP 1: Web Scraping with Selenium ===
+website = 'https://www.espncricinfo.com/series/icc-cricket-world-cup-2023-24-1367856/points-table-standings'
+path = r'C:\Users\j\OneDrive\Desktop\chromedriver.exe'
+service = Service(executable_path=path)
+driver = webdriver.Chrome(service=service)
+
+driver.get(website)
+wait = WebDriverWait(driver, 15)
+time.sleep(10)
+
+# Click dropdown and select IPL
+dropdown = wait.until(EC.element_to_be_clickable((
+    By.XPATH,
+    "//div[@class='ds-flex ds-items-center ds-border-ui-stroke ds-h-8 ds-px-4 ds-border ds-bg-ui-fill ds-rounded-full ds-min-w-max ds-mt-2 ds-cursor-pointer']"
+)))
+dropdown.click()
+
+ipl_option = wait.until(EC.element_to_be_clickable((
+    By.XPATH,
+    "//span[text()='Indian Premier League']/ancestor::a"
+)))
+driver.execute_script("arguments[0].scrollIntoView();", ipl_option)
+ipl_option.click()
+
+time.sleep(10)
+
+# Extract data
+rows = driver.find_elements(By.XPATH, "//table[contains(@class, 'ds-w-full')]//tbody/tr")
+data = []
+count = 0
+
+for row in rows:
+    if count >= 10:
+        break
+    cells = row.find_elements(By.TAG_NAME, "td")
+    if len(cells) >= 10:
+        data.append([cell.text for cell in cells[:10]])
+        count += 1
+
+team_names = [
+    "Chennai Super Kings",
+    "Kolkata Knight Riders",
+    "Lucknow Super Giants",
+    "Rajasthan Royals",
+    "Royal Challengers Bengaluru",
+    "Sunrisers Hyderabad",
+    "Punjab Kings",
+    "Gujarat Titans",
+    "Mumbai Indians",
+    "Delhi Capitals"
+]
+
+columns = ['Team', 'Matches', 'Win', 'Lost', 'T', 'NR', 'Points', 'Net Run Rate', 'Form', 'For']
+df = pd.DataFrame(data, columns=columns)
+df.insert(0, 'Team Name', team_names)
+df.to_csv("IPL 2025 Points Table3.csv", index=False)
+print("✅ Data has been saved to 'IPL 2025 Points Table3.csv'")
+driver.quit()
+
+# === STEP 2: Dashboard with Matplotlib ===
+df.set_index('Team Name', inplace=True)
+df['Matches'] = pd.to_numeric(df['Matches'], errors='coerce')
+df['Win'] = pd.to_numeric(df['Win'], errors='coerce')
+df['Lost'] = pd.to_numeric(df['Lost'], errors='coerce')
+df['NR'] = pd.to_numeric(df['NR'], errors='coerce')
+df['Points'] = pd.to_numeric(df['Points'], errors='coerce')
+df['For'] = df['For'].str.extract(r'(\d+)').astype(float)
+
+plt.figure(figsize=(18, 10))
+gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1])
+plt.suptitle("🏏 IPL 2025 Points Table Dashboard", fontsize=20, fontweight='bold', color='navy')
+
+plt.subplot(gs[0, 0])
+plt.pie(df['Lost'], labels=df.index, autopct='%1.1f%%', startangle=140)
+plt.title('Total Losses')
+
+plt.subplot(gs[0, 1])
+colors_runs = plt.cm.plasma(range(len(df)))
+plt.bar(df.index, df['For'], color=colors_runs)
+plt.xticks(rotation=45, ha='right')
+plt.title('Total Runs Scored')
+plt.xlabel('Team')
+plt.ylabel('Runs')
+
+plt.subplot(gs[1, :])
+df_sorted = df.sort_values('Win', ascending=True)
+colors_wins = plt.cm.viridis(range(len(df_sorted)))
+plt.barh(df_sorted.index, df_sorted['Win'], color=colors_wins)
+plt.title('Wins by Team')
+plt.xlabel('Won Matches')
+plt.ylabel('Team Name')
+plt.xticks(ticks=range(2, 12, 2))
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
+
+logo_dir = r'C:\Users\j\OneDrive\Documents\IPL DASHBOARD\logos'
+logo_files = {
+    "Chennai Super Kings": os.path.join(logo_dir, "chennai_super_kings.png"),
+    "Kolkata Knight Riders": os.path.join(logo_dir, "kolkata_knight_riders.png"),
+    "Lucknow Super Giants": os.path.join(logo_dir, "lucknow_super_giants.png"),
+    "Rajasthan Royals": os.path.join(logo_dir, "rajasthan_royals.png"),
+    "Royal Challengers Bengaluru": os.path.join(logo_dir, "royal_challengers_bengaluru.png"),
+    "Sunrisers Hyderabad": os.path.join(logo_dir, "sunrisers_hyderabad.png"),
+    "Punjab Kings": os.path.join(logo_dir, "punjab_kings.png"),
+    "Gujarat Titans": os.path.join(logo_dir, "gujarat_titans.png"),
+    "Mumbai Indians": os.path.join(logo_dir, "mumbai_indians.png"),
+    "Delhi Capitals": os.path.join(logo_dir, "delhi_capitals.png")
+}
+
+plt.figure(figsize=(16, 10))
+plt.suptitle("🏁 IPL 2025 Team Race Chart (Wins)", fontsize=20, fontweight='bold', color='darkred')
+
+df_sorted_wins = df.sort_values('Win', ascending=True)
+ax = plt.subplot(111)
+y_pos = np.arange(len(df_sorted_wins))
+
+def add_logo(ax, team_name, x, y):
+    if team_name in logo_files:
+        logo_path = logo_files[team_name]
+        if os.path.exists(logo_path):
+            try:
+                img = Image.open(logo_path)
+                zoom_factor = 0.15  # Slightly smaller logos
+                imagebox = OffsetImage(img, zoom=zoom_factor)
+                ab = AnnotationBbox(imagebox, (x, y), frameon=False)
+                ax.add_artist(ab)
+            except Exception as e:
+                print(f"Could not load logo for {team_name} at {logo_path}: {e}")
+                ax.text(x, y, ''.join([word[0] for word in team_name.split()]),
+                        ha='right', va='center', fontsize=10)
+        else:
+            print(f"Logo file not found: {logo_path}")
+            ax.text(x, y, ''.join([word[0] for word in team_name.split()]),
+                    ha='right', va='center', fontsize=10)
+    else:
+        print(f"No logo mapping for {team_name}")
+        ax.text(x, y, ''.join([word[0] for word in team_name.split()]),
+                ha='right', va='center', fontsize=10)
+
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(df_sorted_wins)))
+bars = ax.barh(y_pos, df_sorted_wins['Win'], color=colors, height=0.6)
+
+for i, (team, row) in enumerate(df_sorted_wins.iterrows()):
+    ax.text(row['Win'] + 0.2, i, f"{int(row['Win'])}",
+            va='center', ha='left', fontweight='bold', fontsize=12)
+    ax.text(0.5, i, team, va='center', ha='left', fontsize=10, color='white')
+    add_logo(ax, team, -2.0, i)
+
+ax.set_yticks(y_pos)
+ax.set_yticklabels([])
+ax.invert_yaxis()
+ax.set_xlabel('Number of Wins', fontsize=12)
+ax.set_xlim(-5, df_sorted_wins['Win'].max() + 2)
+ax.grid(axis='x', linestyle='--', alpha=0.6)
+
+for spine in ['top', 'right', 'left']:
+    ax.spines[spine].set_visible(False)
+
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
