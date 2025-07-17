@@ -106,5 +106,4 @@ ESPN Cricinfo — for live IPL data
 
 Open-source tools: Selenium, Pandas, Matplotlib, Pillow
 
-🏁 images/team_race_chart.png
 
