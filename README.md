@@ -43,6 +43,7 @@ pip install -r requirements.txt
 
 
 python ipl_dashboard.py
+```
 
 It will:
 
@@ -52,7 +53,7 @@ Save the data to data/IPL_2025_Points_Table.csv
 
 Generate and save two visualizations:
 
-📊 images/ipl_dashboard.png
+##📊 images/ipl_dashboard.png
 
 ##FEATURES
 
@@ -60,7 +61,7 @@ Generate and save two visualizations:
 
 🧹 Data cleaning and transformation
 
-📊 Visualizations:
+##📊 Visualizations:
 
 Pie chart of team losses
 
